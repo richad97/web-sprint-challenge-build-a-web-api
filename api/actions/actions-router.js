@@ -63,6 +63,7 @@ router.put("/:id", async (req, res) => {
       project_id: req.body.project_id,
       description: req.body.description,
       notes: req.body.notes,
+      completed: req.body.completed,
     };
 
     if (
@@ -70,7 +71,9 @@ router.put("/:id", async (req, res) => {
       incomingAction.description === "" ||
       incomingAction.description === undefined ||
       incomingAction.notes === "" ||
-      incomingAction.notes === undefined
+      incomingAction.notes === undefined ||
+      incomingAction.completed === "" ||
+      incomingAction.completed === undefined
     ) {
       res.status(400).json({ message: "Fields are empty or incorrect." });
     } else {

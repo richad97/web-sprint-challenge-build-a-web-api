@@ -8,7 +8,7 @@ router.get("/", async (req, res) => {
     const projectsArr = await projectsModel.get();
 
     if (projectsArr.length === 0) {
-      return [];
+      res.json([]);
     } else {
       res.status(200).json(projectsArr);
     }
@@ -38,6 +38,7 @@ router.post("/", async (req, res) => {
     const incomingProject = {
       name: req.body.name,
       description: req.body.description,
+      completed: true,
     };
 
     if (
@@ -64,13 +65,16 @@ router.put("/:id", async (req, res) => {
     const incomingProject = {
       name: req.body.name,
       description: req.body.description,
+      completed: req.body.completed,
     };
 
     if (
       incomingProject.name === undefined ||
       incomingProject.name === "" ||
       incomingProject.description === undefined ||
-      incomingProject.description === ""
+      incomingProject.description === "" ||
+      incomingProject.completed === undefined ||
+      incomingProject.completed === ""
     ) {
       res.status(400).json({ message: "Fields are incorrect or empty." });
     } else {
@@ -111,7 +115,7 @@ router.get("/:id/actions", async (req, res) => {
     const projectActions = await projectsModel.getProjectActions(id);
 
     if (projectActions.length === 0) {
-      res.status(404).json({ message: "ID not found." });
+      res.status(404).json([]);
     } else {
       res.status(200).json(projectActions);
     }
