@@ -1,4 +1,5 @@
 const express = require("express");
+
 const actionsModel = require("./actions-model");
 const router = express.Router();
 
@@ -6,7 +7,8 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const actionsArr = await actionsModel.get();
-    res.json(actionsArr);
+
+    res.status(200).json(actionsArr);
   } catch (err) {
     res.status(500);
   }
@@ -21,7 +23,7 @@ router.get("/:id", async (req, res) => {
     if (actionObj === null) {
       res.status(404).json({ message: "ID not found." });
     } else {
-      res.json(actionObj);
+      res.status(200).json(actionObj);
     }
   } catch (err) {
     res.status(500);
@@ -31,26 +33,15 @@ router.get("/:id", async (req, res) => {
 // POST /api/actions
 router.post("/", async (req, res) => {
   try {
-    const incomingAction = {
-      project_id: req.body.project_id,
-      description: req.body.description,
-      notes: req.body.notes,
-    };
+    const { project_id, description, notes } = req.body;
 
-    if (
-      incomingAction.project_id === undefined ||
-      incomingAction.description === "" ||
-      incomingAction.description === undefined ||
-      incomingAction.notes === "" ||
-      incomingAction.notes === undefined
-    ) {
+    if (!project_id || !description || !notes) {
       res.status(400).json({ message: "Fields are empty or incorrect." });
     } else {
-      const insertAction = await actionsModel.insert(incomingAction);
-      res.status(200).json(insertAction);
+      const insertAction = await actionsModel.insert(req.body);
+      res.status(201).json(insertAction);
     }
   } catch (err) {
-    console.log(err);
     res.status(500);
   }
 });
@@ -59,30 +50,17 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const incomingAction = {
-      project_id: req.body.project_id,
-      description: req.body.description,
-      notes: req.body.notes,
-      completed: req.body.completed,
-    };
+    const { project_id, description, notes, completed } = req.body;
 
-    if (
-      incomingAction.project_id === undefined ||
-      incomingAction.description === "" ||
-      incomingAction.description === undefined ||
-      incomingAction.notes === "" ||
-      incomingAction.notes === undefined ||
-      incomingAction.completed === "" ||
-      incomingAction.completed === undefined
-    ) {
+    if (!project_id || !description || !notes || !completed) {
       res.status(400).json({ message: "Fields are empty or incorrect." });
     } else {
-      const updateAction = await actionsModel.update(id, incomingAction);
+      const updateAction = await actionsModel.update(id, req.body);
 
       if (updateAction === null) {
         res.status(404).json({ message: "ID not found." });
       } else {
-        res.json(updateAction);
+        res.status(200).json(updateAction);
       }
     }
   } catch (err) {
@@ -94,13 +72,12 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-
     const deleteAction = await actionsModel.remove(id);
 
     if (deleteAction === 0) {
       res.status(404).json({ message: "ID not found." });
     } else if (deleteAction === 1) {
-      res.json();
+      res.status(200).json();
     }
   } catch (err) {
     res.status(500);

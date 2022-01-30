@@ -1,4 +1,6 @@
 const express = require("express");
+const { checkRequestBody } = require("./projects-middleware");
+
 const projectsModel = require("./projects-model");
 const router = express.Router();
 
@@ -8,7 +10,7 @@ router.get("/", async (req, res) => {
     const projectsArr = await projectsModel.get();
 
     if (projectsArr.length === 0) {
-      res.json([]);
+      res.status(200).json([]);
     } else {
       res.status(200).json(projectsArr);
     }
@@ -33,58 +35,26 @@ router.get("/:id", async (req, res) => {
 });
 
 // POST /api/projects
-router.post("/", async (req, res) => {
+router.post("/", checkRequestBody, async (req, res) => {
   try {
-    const incomingProject = {
-      name: req.body.name,
-      description: req.body.description,
-      completed: true,
-    };
+    const sendingProject = await projectsModel.insert(req.body);
 
-    if (
-      incomingProject.name === undefined ||
-      incomingProject.name === "" ||
-      incomingProject.description === undefined ||
-      incomingProject.description === ""
-    ) {
-      res.status(400).json({ message: "Fields are incorrect or empty." });
-    } else {
-      const sendingProject = await projectsModel.insert(incomingProject);
-
-      res.status(201).json(sendingProject);
-    }
+    return res.status(201).json(sendingProject);
   } catch (err) {
     res.status(500);
   }
 });
 
 // PUT /api/projects/:id
-router.put("/:id", async (req, res) => {
+router.put("/:id", checkRequestBody, async (req, res) => {
   try {
     const { id } = req.params;
-    const incomingProject = {
-      name: req.body.name,
-      description: req.body.description,
-      completed: req.body.completed,
-    };
+    const sendingProject = await projectsModel.update(id, req.body);
 
-    if (
-      incomingProject.name === undefined ||
-      incomingProject.name === "" ||
-      incomingProject.description === undefined ||
-      incomingProject.description === "" ||
-      incomingProject.completed === undefined ||
-      incomingProject.completed === ""
-    ) {
-      res.status(400).json({ message: "Fields are incorrect or empty." });
+    if (sendingProject === null) {
+      res.status(404).json({ message: "ID not found." });
     } else {
-      const sendingProject = await projectsModel.update(id, incomingProject);
-
-      if (sendingProject === null) {
-        res.status(404).json({ message: "ID not found." });
-      } else {
-        res.json(sendingProject);
-      }
+      res.status(200).json(sendingProject);
     }
   } catch (err) {
     res.status(500);
@@ -95,13 +65,12 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-
     const deleteProject = await projectsModel.remove(id);
 
     if (deleteProject === 0) {
       res.status(404).json({ message: "ID not found." });
     } else if (deleteProject === 1) {
-      res.json();
+      res.status(200).json({ message: "Project deleted." });
     }
   } catch (err) {
     res.status(500);
